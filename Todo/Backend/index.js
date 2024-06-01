@@ -36,7 +36,7 @@ app.post('/postTodos', async(req,res)=>{
     const create = await Todo.create({
         title: parsedPayload.data.title,
         description: parsedPayload.data.description,
-        completed: false
+        completed: "False"
     })
     if(create) return res.status(200).json({
         success: true,
@@ -53,7 +53,7 @@ app.put('/updateTodo/:id', async (req,res)=>{
         })
     }
     //update
-    const update = await Todo.findOneAndUpdate({_id: req.params.id}, { completed: true})
+    const update = await Todo.findOneAndUpdate({_id: req.params.id}, { completed: "True"})
     if(update) return res.status(200).json({
         success: true,
         message: "Todo Updated"
