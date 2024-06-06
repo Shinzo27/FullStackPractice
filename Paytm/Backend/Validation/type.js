@@ -12,7 +12,14 @@ const UserSignInParser = zod.object({
     Password: zod.string(),
 })
 
+const UserUpdateParser = zod.object({
+    FirstName: zod.string(),
+    LastName: zod.string(),
+    Password: zod.string(),
+})
+
 module.exports = {
     UserSignUpParser,
-    UserSignInParser
+    UserSignInParser,
+    UserUpdateParser
 }

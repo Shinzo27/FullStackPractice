@@ -2,7 +2,7 @@ const User = require('../Models/User')
 const jwt = require('jsonwebtoken')
 const { JWT_SECRET } = require('../config')
 
-const { UserSignUpParser, UserSignInParser } = require('../Validation/type')
+const { UserSignUpParser, UserSignInParser, UserUpdateParser } = require('../Validation/type')
 
 const UserSignUp = async(req,res) => {
     const BodyParsher = req.body;
@@ -60,7 +60,55 @@ const UserSignIn = async(req,res) => {
     })
 }
 
+const UserUpdate = async(req,res) => {
+    const userId = req.user
+    const bodyParser = req.body;
+    const UpdateParser = UserUpdateParser.safeParse(bodyParser)
+
+    if(!UpdateParser.success) return res.status(400).json({ message: "Fill All The Data!" })
+    
+    const update = await User.findByIdAndUpdate({userId}, { 
+        firstName: UpdateParser.data.FirstName,
+        lastName: UpdateParser.data.LastName,
+        password: UpdateParser.data.Password
+    })
+
+    if(update){ 
+        return res.status(200).json({ message: "Information Updated Successfully!"})
+    } else {
+        return res.status(400).json({ message: "Something went wrong!"})
+    }
+}
+
+const getUsers = async(req,res) => {
+    const filter = req.query.filter || ""
+
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        },{
+            lastName: {
+                "$regex": filter
+            }
+        }
+    ]
+    })
+
+    res.json({
+        user: users.map(user=>({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            id: user._id
+        }))
+    })
+}
+
 module.exports = {
     UserSignUp,
-    UserSignIn
+    UserSignIn,
+    UserUpdate,
+    getUsers
 }
