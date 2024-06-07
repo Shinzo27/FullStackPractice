@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const { JWT_SECRET } = require('../config')
 
 const { UserSignUpParser, UserSignInParser, UserUpdateParser } = require('../Validation/type')
+const Account = require('../Models/Account')
 
 const UserSignUp = async(req,res) => {
     const BodyParsher = req.body;
@@ -23,9 +24,14 @@ const UserSignUp = async(req,res) => {
         password: UserPayload.data.Password
     })
 
-    const jwtToken = jwt.sign(createUser._id, JWT_SECRET)
+    const createAccount = await Account.create({
+        userId: createUser._id,
+        balance: 1 + Math.random() * 10000
+    })
 
-    if(createUser) return res.cookie("token", jwtToken).status(200).json({
+    const jwtToken = jwt.sign({id: createUser._id}, JWT_SECRET)
+
+    if(createUser && createAccount) return res.cookie("token", jwtToken).status(200).json({
         message: "User Created",
         userId: createUser._id,
         jwt: jwtToken
