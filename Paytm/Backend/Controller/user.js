@@ -67,7 +67,7 @@ const UserUpdate = async(req,res) => {
 
     if(!UpdateParser.success) return res.status(400).json({ message: "Fill All The Data!" })
     
-    const update = await User.findByIdAndUpdate({userId}, { 
+    const update = await User.findOneAndUpdate({ _id: userId.id}, { 
         firstName: UpdateParser.data.FirstName,
         lastName: UpdateParser.data.LastName,
         password: UpdateParser.data.Password
