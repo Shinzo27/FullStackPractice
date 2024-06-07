@@ -26,7 +26,7 @@ const UserSignUp = async(req,res) => {
 
     const createAccount = await Account.create({
         userId: createUser._id,
-        balance: 1 + Math.random() * 10000
+        balance: 1 + Math.floor(Math.random() * 10000)
     })
 
     const jwtToken = jwt.sign({id: createUser._id}, JWT_SECRET)
