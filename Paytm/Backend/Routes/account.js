@@ -1,8 +1,8 @@
 const express = require('express')
-const {getBalance} = require('../Controller/account')
+const { getBalance, transfer } = require('../Controller/account')
 
 const router = express.Router()
 
 router.get('/balance', getBalance)
-
+router.get('/transfer', transfer)
 module.exports = router
