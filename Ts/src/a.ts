@@ -58,8 +58,31 @@ console.log(isEligible);
 type GreetArg = string | number
 
 function greetUser(id: GreetArg) {
-    
 }
 
 greetUser(1)
 greetUser("Hello")
+
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+function doSomething(keyPressed: Direction) {
+    if(keyPressed === Direction.Up) {
+        console.log("Up");
+    }
+}
+
+//generics
+function identity<T>(arg: T) {
+    return arg
+}
+function identity2<T>(arg: T) {
+    return arg
+}
+
+let output1 = identity<string>("Hello")
+let output2 = identity<number>(123)
