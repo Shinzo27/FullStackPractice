@@ -1,10 +1,20 @@
+import './App.css'
+import {BrowserRouter, Routes, Route} from 'react-router-dom'
+import Signin from './Pages/Signin'
+import Signup from './Pages/Signup'
+import Dashboard from './Pages/Dashboard'
+import Send from './Pages/Send'
 
-
-function App() {
+function App() {  
   return (
-    <div className="bg-zinc-700">
-      <h1 className='text-black'>Hello World</h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Dashboard/>}/>
+        <Route path='/signin' element={<Signin/>}/>
+        <Route path='/signup' element={<Signup/>}/>
+        <Route path='/send' element={<Send/>}/>
+      </Routes>
+    </BrowserRouter>
   )
 }
 
