@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { IoPersonCircleOutline } from "react-icons/io5";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [filter, setFilter] = useState("");
+  const navigate = useNavigate()
 
   useEffect(() => {
     axios
@@ -27,8 +29,8 @@ const Users = () => {
         />
       </div>
       <div>
-        {users.map((user) => (
-          <div className="flex justify-between items-center p-5 text-white">
+        {users.map((user, index) => (
+          <div className="flex justify-between items-center p-5 text-white" key={index}>
             <div className="flex justify-center items-center gap-8 text-2xl">
               <div>
                 <IoPersonCircleOutline />
@@ -36,7 +38,9 @@ const Users = () => {
               <div>{user.username}</div>
             </div>
             <div>
-              <button className="bg-blue-600 p-2 rounded-md">Send Money</button>
+              <button className="bg-blue-600 p-2 rounded-md" onClick={(e)=>{
+                navigate("/send?id="+ user.id + "&name="+ user.firstName)
+              }}>Send Money</button>
             </div>
           </div>
         ))}

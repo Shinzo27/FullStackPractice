@@ -61,6 +61,7 @@ const UserSignIn = async(req,res) => {
     const jwtToken = jwt.sign(payload, JWT_SECRET)
 
     return res.cookie("token", jwtToken).status(200).json({
+        success: true,
         message: "User Logged In",
         jwt: jwtToken
     })

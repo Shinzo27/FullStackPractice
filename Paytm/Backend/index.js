@@ -9,7 +9,11 @@ const app = express()
 
 mongoose.connect("mongodb+srv://20bmiit031:Shinzo27@cluster0.mcnxi5d.mongodb.net/").then(()=>{console.log("Mongodb Connected!");})
 
-app.use(cors())
+app.use(cors({
+    origin: ["http://localhost:5173"],
+    methods: ['GET','POST','PUT','DELETE'],
+    credentials: true
+}))
 app.use(express.json())
 app.use(cookieParser())
 app.use(checkForAuthentication())
