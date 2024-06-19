@@ -10,11 +10,10 @@ import { Navigate } from 'react-router-dom'
 const Dashboard = () => {
   
   const [auth, setAuth] = useRecoilState(userAtom)
+  const isAuthenticated = useRecoilValue(isAuthenticatedSelector)
 
-  console.log(auth)
+  console.log(isAuthenticated)
 
-  // if(isAuthenticated == false) return <Navigate to='/signin'/>
-  // if(auth.isAuthenticated == false) return <Navigate to='/signin'/>
   return (
     <div className='bg-gray-800 h-screen'>
       <Navbar/>
