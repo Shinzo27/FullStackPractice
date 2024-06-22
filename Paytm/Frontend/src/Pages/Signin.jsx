@@ -20,7 +20,7 @@ const Signin = () => {
         isAuthenticated: true,
         user: response.data.jwt
       })
-      // navigateTo('/')
+      navigateTo('/')
     }
     else{
       alert('Invalid Credentials')
