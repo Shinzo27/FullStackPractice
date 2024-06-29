@@ -63,4 +63,33 @@ async function createTodo(userId:number, title: string, description: string, don
     console.log(res);
 }
 
-createTodo(1,"Go to gym","Go to gym at 6pm",false)
+// createTodo(1,"Go to gym","Go to gym at 6pm",false)
+
+async function getTodos(userId:number) {
+    const todos = await prisma.todos.findMany(
+        {
+            where: {
+                userId: userId
+            }
+        }
+    )
+    console.log(todos);
+}
+
+// getTodos(1)
+
+async function getTodosWithUserDetails(userId:number) {
+    const todos = await prisma.todos.findMany({
+        where: {
+            userId: userId
+        },
+        select: {
+            user: true,
+            title: true,
+            description: true
+        }
+    })
+    console.log(todos);
+}
+
+getTodosWithUserDetails(1)
