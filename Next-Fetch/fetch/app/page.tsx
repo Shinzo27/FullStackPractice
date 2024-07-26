@@ -1,7 +1,5 @@
 import axios from "axios";
-import {PrismaClient} from '@prisma/client'
-
-const client = new PrismaClient()
+import client from '@/db/index'
 
 async function getDetails() {
   const user = await client.user.findFirst({})
