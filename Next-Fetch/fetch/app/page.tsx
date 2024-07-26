@@ -1,9 +1,14 @@
 import axios from "axios";
+import {PrismaClient} from '@prisma/client'
 
+const client = new PrismaClient()
 
 async function getDetails() {
-  const response = await axios.get('http://localhost:3000/api/user')
-  return response.data
+  const user = await client.user.findFirst({})
+  return { 
+    username: user?.username,
+    password: user?.password
+  }
 }
 
 export default async function Home() {
@@ -12,10 +17,10 @@ export default async function Home() {
     <>
     <div className="bg-gray-900 text-white min-h-screen flex justify-center items-center flex-col gap-5">
       <div>
-        {userData.email}
+        {userData.username}
       </div>
       <div>
-        {userData.name}
+        {userData.password}
       </div>
     </div>
     </>

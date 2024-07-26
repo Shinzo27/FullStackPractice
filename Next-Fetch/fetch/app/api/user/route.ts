@@ -3,10 +3,12 @@ import { PrismaClient } from '@prisma/client'
 
 const client = new PrismaClient()
 
-export function GET() {
+export async function GET(req: NextRequest) {
+    const user = await client.user.findFirst({})
+
     return Response.json({
-        email: "pratham@gmail.com",
-        name: "pratham"
+        email: user?.username,
+        name: user?.password
     })
 }
 
