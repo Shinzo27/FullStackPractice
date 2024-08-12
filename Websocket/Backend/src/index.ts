@@ -1,36 +1,37 @@
-import WebSocket, { WebSocketServer } from 'ws';
-import http from 'http';
-import express from 'express'
+import express, { Request, Response } from 'express';
+import { createServer } from 'http';
+import { Server, WebSocket } from 'ws';
 
-const app = express()
-const server = require('http').createServer(app);
+// Initialize Express app
+const app = express();
+const port = 3000;
 
-const wss = new WebSocket.Server({ server });
+// Create an HTTP server from the Express app
+const server = createServer(app);
 
-wss.on('connection', (ws) => {
-    console.log('New client connected');
+// Create a WebSocket server attached to the HTTP server
+const wss = new Server({ server });
 
-    // Send a welcome message to the client
-    ws.send('Welcome to the WebSocket server!');
-
-    // Listen for messages from the client
-    ws.on('message', (message) => {
-        console.log('Received:', message);
-
-        // Broadcast the message to all connected clients
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    });
-
-    // Handle client disconnection
-    ws.on('close', () => {
-        console.log('Client disconnected');
-    });
+// Serve a simple index.html file
+app.get('/', (req: Request, res: Response) => {
+    res.sendFile(__dirname + '/index.html');
 });
 
-server.listen(8080, function() {
-    console.log((new Date()) + ' Server is listening on port 8080');
+wss.on('connection', function connection(ws) {
+    ws.on('error', console.error);
+  
+    ws.on('message', function message(data, isBinary) {
+      wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(data, { binary: isBinary });
+        }
+      });
+    });
+  
+    ws.send('Hello! Message From Server!!');
+  });
+
+// Start the server
+server.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
