@@ -11,8 +11,6 @@ async function startServer() {
     }
 }
 
-startServer()
-
 async function main() {
     while(1){
         const response = await client.brPop("submissions", 0);
@@ -22,3 +20,6 @@ async function main() {
         console.log("Proccessed users submission!");
     }
 }
+
+startServer()
+main()
