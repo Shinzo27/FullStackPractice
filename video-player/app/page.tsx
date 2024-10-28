@@ -1,12 +1,17 @@
-import Image from "next/image";
-import Video from 'next-video'
-import getStarted from '@/videos/get-started.mp4'
+import MuxPlayer from "@mux/mux-player-react";
 
 export default function Home() {
   return (
     <>
       <h1>Video Player</h1>
-      <Video src={getStarted} autoPlay={true} loop={true} muted={true} />
+      <MuxPlayer
+        streamType="on-demand"
+        playbackId="i100EPjMIn101IZKcfwNyHfbp3LB8a9bggABjzevvmKi4"
+        metadataVideoTitle="Placeholder (optional)"
+        metadataViewerUserId="Placeholder (optional)"
+        primaryColor="#FFFFFF"
+        secondaryColor="#000000"
+      />
     </>
   );
 }
