@@ -56,6 +56,9 @@ io.on('connection', (socket) => {
     socket.on('leaveRoom', (data) => {
         const { room, username } = data;
         socket.leave(room);
+        chatRoomUsers = allUsers.filter((user) => user.room !== room);
+        socket.to(room).emit('chatroom_users', chatRoomUsers);
+        socket.emit('chatroom_users', chatRoomUsers);
         let createdTime = new Date().toISOString();
         console.log(`${username} left room`);
         socket.to(room).emit('message', {
@@ -63,10 +66,6 @@ io.on('connection', (socket) => {
             createdTime,
             username: CHAT_BOT,
         })
-        socket.to(room).emit('message', {
-            username: username,
-            message: `${username} has left the chat`,
-          });
     })
 })
 

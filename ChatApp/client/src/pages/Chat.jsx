@@ -5,6 +5,7 @@ const Chat = ({ socket }) => {
   const [messagesRecieved, setMessagesReceived] = useState([]);
   const [username, setUsername] = useState('');
   const [room, setRoom] = useState('');
+  const [chatRoomUsers, setChatRoomUsers] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +21,9 @@ const Chat = ({ socket }) => {
       setRoom(data.room);
       setUsername(data.username);
     });
+    socket.on('chatroom_users', (data) => {
+      setChatRoomUsers(data);
+    });
 
     // Remove event listener on component unmount
     return () => socket.off('message');
@@ -34,6 +38,10 @@ const Chat = ({ socket }) => {
   const leaveRoom = () => {
     socket.emit('leaveRoom', { room, username })
     navigate('/');
+    socket.on('chatroom_users', (data) => {
+      console.log(data);
+      setChatRoomUsers(data);
+    });
   }
 
   return (
@@ -50,6 +58,20 @@ const Chat = ({ socket }) => {
           <br />
         </div>
       ))}
+      <div>
+        TOtal Users
+      {
+        chatRoomUsers.map((user, i) => (
+          <div key={i}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>{user.username}</span>
+            </div>
+            <p>{user.message}</p>
+            <br />
+          </div>
+        ))
+      }
+      </div>
       <button className="btn btn-secondary" onClick={()=>leaveRoom(room, username)}>Leave Room</button>
     </div>
   );
