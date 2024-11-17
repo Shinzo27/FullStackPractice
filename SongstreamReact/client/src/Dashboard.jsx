@@ -7,7 +7,7 @@ import SpotifyWebApi from "spotify-web-api-node"
 import axios from "axios"
 
 const spotifyApi = new SpotifyWebApi({
-  clientId: "8b945ef10ea24755b83ac50cede405a0",
+  clientId: "26e584bbf23c494494bcaba67a8bc26e",
 })
 
 export default function Dashboard({ code }) {
@@ -45,7 +45,6 @@ export default function Dashboard({ code }) {
 
   useEffect(() => {
     if (!search) return setSearchResults([])
-    if (!accessToken) return
 
     let cancel = false
     spotifyApi.searchTracks(search).then(res => {

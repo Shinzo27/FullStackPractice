@@ -55,6 +55,18 @@ app.post("/login", (req, res) => {
       })
 })
 
+app.get("/callback", (req, res) => {
+    const code = req.query.code;
+    const error = req.query.error;
+
+    if (error) {
+        return res.send(`Authorization failed: ${error}`);
+    }
+    res.json({
+      code: code
+    })
+})
+
 app.listen(3001, () => {
   console.log("Server is running on port 3001")
 })
