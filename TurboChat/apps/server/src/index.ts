@@ -1,5 +1,8 @@
 import http from "http";
 import SocketService from "./services/socket";
+import dotenv from 'dotenv';
+
+dotenv.config({path: './.env'}); 
 
 async function init() {
     const socketService = new SocketService();
