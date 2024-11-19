@@ -32,7 +32,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({
       if(socket) {
         socket.emit("event:message", { message });
       }
-    },[socket]);
+  },[socket]);
 
     useEffect(()=>{
         const _socket = io("http://localhost:8000");

@@ -17,6 +17,11 @@ class SocketService {
         const io = this.io;
         io.on('connect', (socket)=>{
             console.log("Socket connected")
+
+            socket.on('event:message', (message)=>{
+                console.log("Message received " + message)
+                io.emit('event:message', JSON.stringify({ message: message }))
+            })
         })
     }
 
