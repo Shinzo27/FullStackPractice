@@ -6,14 +6,16 @@ import React from "react";
 import { useSocket } from "../context/SocketProvider";
 
 export default function Home() {
-  const { sendMessage } = useSocket();
-  const [message, setMessage] = React.useState("");
-
+  const [username, setUsername] = React.useState<string>("");
+  const [roomId, setRoomId] = React.useState<string>("");
+  const { joinRoom } = useSocket();
+  
   return (
     <div>
       <h1>Hello world!</h1>
-      <input type="text" placeholder="Enter room name" value={message} onChange={(e)=>setMessage(e.target.value)} />
-      <button onClick={()=>sendMessage(message)}>Join room</button>
+      <input type="text" placeholder="Enter room name" value={roomId} onChange={(e)=>setRoomId(e.target.value)} /><br/><br/>
+      <input type="text" placeholder="Enter username" value={username} onChange={(e)=>setUsername(e.target.value)} />
+      <button onClick={()=>joinRoom({roomId, username})}>Join Room</button>
     </div>
   );
 }

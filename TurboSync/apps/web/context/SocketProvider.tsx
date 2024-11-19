@@ -1,4 +1,5 @@
 "use client";
+import { redirect } from "next/navigation";
 import React, { useCallback, useContext, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 interface SocketProviderProps {
@@ -6,8 +7,10 @@ interface SocketProviderProps {
 }
 
 interface iSocketContext {
-    sendMessage: (message: string) => any;
-    message: string[]
+    socket: Socket | undefined;
+    joinRoom: ({roomId, username}: { roomId: string, username: string }) => any;
+    leaveRoom: (roomId: string) => any;
+    checkRoom: (roomId: string, callback: (user: string[]) => void) => any;
 }
 
 const SocketContext = React.createContext<iSocketContext | null>(null);
@@ -22,35 +25,41 @@ export const useSocket = () => {
 
 const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProviderProps) => {
     const [socket, setSocket] = React.useState<Socket>();
-    const [message, setMessage] = React.useState<string[]>([]);
 
-    const sendMessage: iSocketContext['sendMessage'] = useCallback((message: string) => {
-        console.log("Send message " + message);
+    const joinRoom = useCallback(({roomId, username}: { roomId: string, username: string }) => {
         if (socket) {
-            socket.emit("event:message", message);
+            socket.emit("joinRoom", { roomId: roomId, username: username });
+            redirect(`/room/${roomId}`)
         }
+        console.log("Join room " + roomId);
+    }, [socket]);
+
+    const leaveRoom = useCallback((roomId: string) => {
+        if (socket) {
+            socket.emit("leaveRoom", roomId);
+        }
+        console.log("Leave room " + roomId);
+    }, [socket]);
+
+    const checkRoom = useCallback((roomId: string, callback: (user: string[]) => void) => {
+        if (socket) {
+            socket.emit("checkRoom", roomId, callback);
+        }
+        console.log("Check room " + roomId);
     }, [socket]);
 
     useEffect(() => {
         const _socket = io("http://localhost:8000");
-        _socket.on("event:message", onMessageReceived)
         setSocket(_socket)
         
         return () => {
             _socket.disconnect()
-            _socket.off("event:message", onMessageReceived)
             setSocket(undefined)
         }
     },[])
-
-    const onMessageReceived = useCallback((msg: string) => {
-        console.log("Message received " + msg);
-        const { message } = JSON.parse(msg) as { message: string};
-        setMessage((prevState) => [...prevState, message]);
-    }, [])
     
     return (
-        <SocketContext.Provider value={{ sendMessage: sendMessage, message: message }}>
+        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, checkRoom: checkRoom, socket: socket }}>
             {children}
         </SocketContext.Provider>
     );
