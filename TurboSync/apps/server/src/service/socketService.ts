@@ -50,6 +50,10 @@ class SocketService {
                 }))
                 callback(JSON.stringify({ user: user }))
             })
+
+            socket.on('addSong', async (songId)=> {
+                console.log("Add song " + songId)
+            })
         })
     }
 
