@@ -10,7 +10,7 @@ interface iSocketContext {
     socket: Socket | undefined;
     joinRoom: ({roomId, username}: { roomId: string, username: string }) => any;
     leaveRoom: (roomId: string) => any;
-    checkRoom: (roomId: string, callback: (user: string[]) => void) => any;
+    checkRoom: (roomId: string, callback: (user: string) => void) => any;
 }
 
 const SocketContext = React.createContext<iSocketContext | null>(null);
@@ -41,7 +41,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
         console.log("Leave room " + roomId);
     }, [socket]);
 
-    const checkRoom = useCallback((roomId: string, callback: (user: string[]) => void) => {
+    const checkRoom = useCallback((roomId: string, callback: (user: string) => void) => {
         if (socket) {
             socket.emit("checkRoom", roomId, callback);
         }

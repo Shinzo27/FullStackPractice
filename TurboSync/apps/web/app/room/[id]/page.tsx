@@ -7,12 +7,14 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     const id = React.use(params);
     const roomId = id.id
     const { checkRoom, socket, leaveRoom } = useSocket();
-    const [users, setUsers] = React.useState<string[]>([]);
+    const [users, setUsers] = React.useState<any>([])
 
     useEffect(() => {
         async function checkRooms() {
             await checkRoom(roomId, (user)=>{
-                setUsers(user)
+                const userParsed = JSON.parse(user)
+                setUsers(userParsed.user)
+                console.log(userParsed)
             })
         }
         checkRooms()
@@ -38,7 +40,9 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
                 Joined Room { roomId }
             </div>
             <div>
-                { users.length > 0 && users.map((user)=><div key={user}>{user}</div>) }
+                { users.map((user : { id: string, username: string })=>{
+                    return <div key={user.id}>{user.username}</div>
+                })}
             </div>
             <div>
                 <button onClick={handleLeaveRoom}>

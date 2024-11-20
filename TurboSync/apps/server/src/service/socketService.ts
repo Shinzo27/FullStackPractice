@@ -44,8 +44,11 @@ class SocketService {
 
             socket.on('checkRoom', async (roomId, callback)=> {
                 const socketsInRoom = await io.in(roomId).fetchSockets()
-                const user = socketsInRoom.map((socket)=>socket.id)
-                callback(user)
+                const user = socketsInRoom.map((socket)=>({
+                    id: socket.id,
+                    username: userMap.get(socket.id)
+                }))
+                callback(JSON.stringify({ user: user }))
             })
         })
     }
