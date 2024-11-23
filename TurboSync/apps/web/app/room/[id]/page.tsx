@@ -9,6 +9,7 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     const { checkRoom, socket, leaveRoom, addSong } = useSocket();
     const [users, setUsers] = React.useState<any>([])
     const [url, setUrl] = useState<string>("")
+    const [songs, setSongs] = useState<string[]>([])
 
     useEffect(() => {
         async function checkRooms() {
@@ -23,11 +24,18 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
 
     useEffect(()=>{
         socket?.on('checkRoom', (message)=>{
-            console.log("Message received " + message)
             const data = JSON.parse(message)
             console.log(data)
             setUsers(data.user)
         })
+        socket?.on('addSong', (message)=>{
+            setSongs((prevSongs)=>[...prevSongs, message])
+        })
+
+        return () => {
+            socket?.off('addSong');
+            socket?.off('checkRoom');
+        };
     }, [socket])
 
     const handleLeaveRoom = () => {
@@ -36,6 +44,7 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     }
 
     const extractYoutubeID = (url: string) => {
+        console.log(url);
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const match = url.match(regExp);
         return (match && match[2]?.length === 11) ? match[2] : null;
@@ -44,8 +53,9 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     const handleAddSong = () => {
         const youtubeId = extractYoutubeID(url)
         if(youtubeId){
-            addSong(youtubeId)
+            addSong({roomId: roomId, songId: youtubeId})
         }
+        setUrl("")
     }
 
     return (
@@ -67,6 +77,18 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
                 <button onClick={handleLeaveRoom}>
                     Leave Room
                 </button>
+            </div>
+            <div>
+                { 
+                    songs.length > 0 ? 
+                    <div>
+                        Songs: 
+                        { songs.map((song : string)=>{
+                            return <div key={song}>{song}</div>
+                        })}
+                    </div>
+                    : null
+                }
             </div>
         </>
     );

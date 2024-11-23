@@ -6,7 +6,7 @@ class SocketService {
     private _io:Server;
 
     constructor(){
-        console.log("SOcket io connected")
+        console.log("Socket io connected")
         this._io = new Server({
             cors: {
                 origin: "*",
@@ -51,9 +51,10 @@ class SocketService {
                 callback(JSON.stringify({ user: user }))
             })
 
-            socket.on('addSong', async (songId)=> {
-                console.log("Add song " + songId)
+            socket.on('addSong', async ({roomId, songId})=> {
+                io.to(roomId).emit('addSong', songId.toString())
             })
+
         })
     }
 
