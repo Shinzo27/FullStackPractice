@@ -1,4 +1,5 @@
 import { Server } from "socket.io"
+import redis from "./redisService";
 
 const userMap = new Map<string, string[]>()
 
@@ -51,8 +52,31 @@ class SocketService {
                 callback(JSON.stringify({ user: user }))
             })
 
-            socket.on('addSong', async ({roomId, songId})=> {
-                io.to(roomId).emit('addSong', songId.toString())
+            socket.on('addSong', async ({roomId, song})=> {
+                const playlistkey = `room:${roomId}:playlist`
+                const votekey = `room:${roomId}:votes`
+                const songtitle = JSON.parse(song).title
+
+                await redis.rPush(playlistkey, song)
+
+                await redis.zAdd(votekey, { score: 0, value: songtitle }, { NX: true });
+
+                io.to(roomId).emit('addSong', JSON.parse(song))
+            })
+
+            socket.on('upvote', async ({roomId, songTitle})=> {
+                const votekey = `room:${roomId}:votes`
+                const songtitle = songTitle
+
+                await redis.zIncrBy(votekey, 1, songtitle);
+                io.to(roomId).emit('upvote', songtitle)
+            })
+
+            socket.on('downvote', async ({roomId, song})=> {
+                const votekey = `room:${roomId}:votes`
+                const songtitle = JSON.parse(song).title
+
+                await redis.zIncrBy(votekey, -1, songtitle);
             })
 
         })

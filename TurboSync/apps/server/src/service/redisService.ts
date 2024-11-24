@@ -1,35 +1,18 @@
-import { createClient } from "redis"
+import Redis, { createClient } from 'redis';
 
-class RedisService {
-    private _client: any;
+const redis = createClient({
+    url: process.env.REDIS_URL
+});
 
-    constructor(){
-        this._client = createClient({
-            url: "redis://localhost:6379"
-        })
-    }
+redis.on('connect', () => {
+    console.log('Redis connected');
+});
 
-    public async getUser(roomId: string){
-        const user = await this._client.get(roomId)
-        return user
-    }
+redis.on('error', (err) => {
+    console.log(process.env.REDIS_PORT)
+    console.error('Redis error', err);
+});
 
-    public async setUser(roomId: string, user: string){
-        await this._client.set(roomId, user)
-    }
+redis.connect();
 
-    public initListener(){
-        this._client.on("connect", ()=>{
-            console.log("Redis connected")
-        })
-
-        this._client.on("error", (err:any)=>{
-            console.log("Redis error", err)
-        })
-    }
-    public get client(){
-        return this._client
-    }
-}
-
-export default RedisService
+export default redis;

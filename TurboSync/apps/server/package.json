@@ -8,6 +8,7 @@
         "dev": "tsc-watch --onSuccess \"node dist/index.js\""
     },
     "dependencies": {
+        "dotenv": "^16.4.5",
         "ioredis": "^5.4.1",
         "redis": "^4.7.0",
         "socket.io": "^4.8.1",

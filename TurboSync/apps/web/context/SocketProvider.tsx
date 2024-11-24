@@ -11,7 +11,8 @@ interface iSocketContext {
     joinRoom: ({roomId, username}: { roomId: string, username: string }) => any;
     leaveRoom: (roomId: string) => any;
     checkRoom: (roomId: string, callback: (user: string) => void) => any;
-    addSong: ({roomId, songId}: { roomId: string, songId: string }) => any;
+    addSong: ({roomId, song}: { roomId: string, song:{ title: string, youtubeId: string } }) => any;
+    upvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
 }
 
 const SocketContext = React.createContext<iSocketContext | null>(null);
@@ -49,9 +50,15 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
         console.log("Check room " + roomId);
     }, [socket]);
 
-    const addSong = useCallback(({songId, roomId} : { songId: string, roomId: string }) => {
+    const addSong = useCallback(({song, roomId} : { song: { title: string, youtubeId: string }, roomId: string }) => {
         if (socket) {
-            socket.emit("addSong", { roomId: roomId, songId: songId });
+            socket.emit("addSong", { roomId: roomId, song: JSON.stringify(song) });
+        }
+    }, [socket]);
+
+    const upvote = useCallback(({roomId, songtitle}: { roomId: string, songtitle: string }) => {
+        if (socket) {
+            socket.emit("upvote", { roomId: roomId, songTitle: songtitle });
         }
     }, [socket]);
 
@@ -66,7 +73,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
     },[])
     
     return (
-        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, checkRoom: checkRoom, socket: socket, addSong: addSong }}>
+        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, checkRoom: checkRoom, socket: socket, addSong: addSong, upvote: upvote }}>
             {children}
         </SocketContext.Provider>
     );

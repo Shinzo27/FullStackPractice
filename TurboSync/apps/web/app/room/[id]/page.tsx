@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 export function page ({ params }: { params: Promise<{ id: string }> }) {    
     const id = React.use(params);
     const roomId = id.id
-    const { checkRoom, socket, leaveRoom, addSong } = useSocket();
+    const { checkRoom, socket, leaveRoom, addSong, upvote } = useSocket();
     const [users, setUsers] = React.useState<any>([])
     const [url, setUrl] = useState<string>("")
     const [songs, setSongs] = useState<string[]>([])
@@ -29,12 +29,18 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
             setUsers(data.user)
         })
         socket?.on('addSong', (message)=>{
-            setSongs((prevSongs)=>[...prevSongs, message])
+            console.log(message)
+            setSongs((prevSongs)=>[...prevSongs, message.title])
+        })
+        socket?.on('upvote', (message)=>{
+            console.log("upvote " + message)
+            alert("Upvoted " + message)
         })
 
         return () => {
             socket?.off('addSong');
             socket?.off('checkRoom');
+            socket?.off('upvote');
         };
     }, [socket])
 
@@ -52,12 +58,24 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
 
     const handleAddSong = () => {
         const youtubeId = extractYoutubeID(url)
-        if(youtubeId){
-            addSong({roomId: roomId, songId: youtubeId})
-        }
+        const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY
+        const requrl = `https://www.googleapis.com/youtube/v3/videos?id=${youtubeId}&part=snippet,contentDetails&key=${API_KEY}`
+        fetch(requrl)
+            .then((response)=>response.json())
+            .then((data)=>{
+                if(data.items.length > 0){
+                    const title = data.items[0].snippet.title
+                    addSong({roomId: roomId, song: {title: title, youtubeId: youtubeId || ""}})
+                } else {
+                    alert("No video found")
+                }
+            })
         setUrl("")
     }
 
+    const handleUpvote = ({songTitle}: { songTitle: string }) => {
+        upvote({roomId: roomId, songtitle: songTitle})
+    }
     return (
         <>
             <div>
@@ -84,7 +102,21 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
                     <div>
                         Songs: 
                         { songs.map((song : string)=>{
-                            return <div key={song}>{song}</div>
+                            return <div key={song} className="flex items-center">
+                                <div>
+                                    {song}
+                                </div>
+                                <div>
+                                    <button onClick={()=>handleUpvote({songTitle: song})}>
+                                        Upvote
+                                    </button>
+                                </div>
+                                <div>
+                                    <button>
+                                        Downvote
+                                    </button>
+                                </div>
+                            </div>
                         })}
                     </div>
                     : null

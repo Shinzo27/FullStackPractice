@@ -1,10 +1,11 @@
 import http from 'http';
 import SocketService from './service/socketService';
-import RedisService from './service/redisService';
+import dotenv from 'dotenv';
+
+dotenv.config()
 
 async function init() {
     const socketService = new SocketService()
-    const redisService = new RedisService()
     const server = http.createServer()
 
     socketService.io.attach(server)
@@ -13,7 +14,6 @@ async function init() {
         console.log("Server is running on port 8000")
     })
     
-    redisService.initListener()
     socketService.initListener()
 }
 
