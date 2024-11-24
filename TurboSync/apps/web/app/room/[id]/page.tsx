@@ -16,7 +16,6 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
             await checkRoom(roomId, (user)=>{
                 const userParsed = JSON.parse(user)
                 setUsers(userParsed.user)
-                console.log(userParsed)
             })
         }
         checkRooms()
@@ -25,16 +24,13 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     useEffect(()=>{
         socket?.on('checkRoom', (message)=>{
             const data = JSON.parse(message)
-            console.log(data)
             setUsers(data.user)
         })
         socket?.on('addSong', (message)=>{
-            console.log(message)
             setSongs((prevSongs)=>[...prevSongs, message.title])
         })
         socket?.on('upvote', (message)=>{
-            console.log("upvote " + message)
-            alert("Upvoted " + message)
+            console.log(message)
         })
 
         return () => {
