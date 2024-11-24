@@ -61,7 +61,9 @@ class SocketService {
 
                 await redis.zAdd(votekey, { score: 0, value: songtitle }, { NX: true });
 
-                io.to(roomId).emit('addSong', JSON.parse(song))
+                const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+
+                io.to(roomId).emit('addSong', JSON.parse(song), { songs: songs })
             })
 
             socket.on('upvote', async ({roomId, songTitle})=> {
@@ -70,7 +72,7 @@ class SocketService {
 
                 await redis.zIncrBy(votekey, 1, songtitle);
 
-                const result = await redis.zRangeWithScores(votekey, 0, -1);
+                const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
 
                 if (result.length === 0) {
                     // throw new Error('No songs found in the room.');
