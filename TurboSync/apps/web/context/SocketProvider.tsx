@@ -40,6 +40,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
         const username = localStorage.getItem("username")
         if (socket) {
             socket.emit("leaveRoom", { roomId: roomId, username: username });
+            localStorage.removeItem("username")
         }
         console.log("Leave room " + roomId);
     }, [socket]);

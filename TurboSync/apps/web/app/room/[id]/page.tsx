@@ -17,25 +17,42 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     const [songs, setSongs] = useState<iSong[]>([])
 
     useEffect(() => {
-        const checkRoom = (roomId: string, callback: (user: string) => void) => {
+        const checkRoom = (roomId: string, callback: ({ user, playlist }: { user: string[], playlist: iSong[] }) => void) => {
             if (socket) {
                 socket.emit("checkRoom", roomId, callback);
             }
         }
         checkRoom(roomId, (result)=>{
-            console.log(result)
-            setUsers(result)
+            const users = result.user
+            const playlist = result.playlist
+            setUsers(users)
+            setSongs(playlist)
         })
+
+        if(socket){
+            socket.on('joinRoom', (message)=>{
+                console.log("User Joined");
+                console.log(message)
+                alert(`${message.username} joined the room`)
+                setUsers(message.user)
+            })
+        }
+
+        if(socket){
+            socket.on('leaveRoom', (message)=>{
+                alert(`${message.username} left the room`)
+                setUsers(message.users)
+            })
+        }
 
         return () => {
             socket?.off('checkRoom');
+            socket?.off('joinRoom');
+            socket?.off('leaveRoom');
         };
     }, [socket])
 
     useEffect(()=>{
-         socket?.on('joinRoom', (message)=>{
-            console.log("User Joined");
-         })
          socket?.on('checkRoom', (message)=>{
             console.log("Check room called!");
             const data = JSON.parse(message)

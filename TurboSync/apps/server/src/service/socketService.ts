@@ -27,7 +27,8 @@ class SocketService {
                     await redis.sAdd(userKey, username)
 
                     socket.join(roomId)
-                    io.to(roomId).emit('joinRoom', username)
+                    const user = await redis.sMembers(userKey)
+                    io.to(roomId).emit('joinRoom', {username, user})
 
                     console.log(`${username} joined room ${roomId}`)
                 } catch (error) {
@@ -39,13 +40,17 @@ class SocketService {
                 console.log("Leave room " + roomId + " by " + username)
                 const userKey = `room:${roomId}:users`
                 await redis.sRem(userKey, username)
+                const users = await redis.sMembers(userKey)
                 socket.leave(roomId)
+                io.to(roomId).emit("leaveRoom", {roomId, username, users})
             })
 
             socket.on('checkRoom', async (roomId, callback)=> {
                 const userKey = `room:${roomId}:users`
                 const user = await redis.sMembers(userKey)
-                callback(user)
+                const votekey = `room:${roomId}:votes`
+                const playlist = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+                callback({user, playlist})
             })
 
             socket.on('addSong', async ({roomId, song})=> {
@@ -89,22 +94,6 @@ class SocketService {
                 }
 
                 io.to(roomId).emit('downvote', { result })
-            })
-
-            socket.on('disconnect', async ()=> {
-                try {
-                    const { roomId, username } = socket.data 
-                    console.log(roomId)
-                    console.log(username)
-                    const userKey = `room:${roomId}:users`
-                    await redis.sRem(userKey, username)
-
-                    socket.to(roomId).emit('disconnect', username)
-
-                    console.log(`${username} left room ${roomId}`)
-                } catch (error) {
-                    
-                }
             })
         })
     }
