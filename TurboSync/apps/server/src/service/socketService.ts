@@ -1,8 +1,6 @@
 import { Server } from "socket.io"
 import redis from "./redisService";
 
-const userMap = new Map<string, string[]>()
-
 class SocketService {
     private _io:Server;
 
@@ -21,37 +19,33 @@ class SocketService {
         io.on('connect', (socket)=>{
             console.log("Socket connected")
 
-            const emitUser = async(roomId: string)=>{
-                const socketsInRoom = await io.in(roomId).fetchSockets()
-                const user = socketsInRoom.map((socket)=>({
-                    id: socket.id,
-                    username: userMap.get(socket.id)
-                }))
-                io.to(roomId).emit('checkRoom', JSON.stringify({ user: user }))
-            }   
-
             socket.on('joinRoom', async({roomId, username})=> {
-                socket.join(roomId)
-                userMap.set(socket.id, username)
-                await emitUser(roomId)
+                try {
+                    console.log("room id " + roomId)
+                    console.log("username " + username)
+                    const userKey = `room:${roomId}:users`
+                    await redis.sAdd(userKey, username)
+
+                    socket.join(roomId)
+                    io.to(roomId).emit('joinRoom', username)
+
+                    console.log(`${username} joined room ${roomId}`)
+                } catch (error) {
+                    console.log(error); 
+                }
             })
 
-            socket.on('leaveRoom', async(roomId)=> {
-                console.log("Leave room " + roomId)
+            socket.on('leaveRoom', async({roomId, username}: { roomId: string, username: string })=> {
+                console.log("Leave room " + roomId + " by " + username)
+                const userKey = `room:${roomId}:users`
+                await redis.sRem(userKey, username)
                 socket.leave(roomId)
-                userMap.delete(socket.id)
-                await emitUser(roomId)
             })
 
             socket.on('checkRoom', async (roomId, callback)=> {
-                const votekey = `room:${roomId}:votes`
-                const socketsInRoom = await io.in(roomId).fetchSockets()
-                const user = socketsInRoom.map((socket)=>({
-                    id: socket.id,
-                    username: userMap.get(socket.id)
-                }))
-                const playlist = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
-                callback(JSON.stringify({ user: user, playlist: playlist }))
+                const userKey = `room:${roomId}:users`
+                const user = await redis.sMembers(userKey)
+                callback(user)
             })
 
             socket.on('addSong', async ({roomId, song})=> {
@@ -97,6 +91,21 @@ class SocketService {
                 io.to(roomId).emit('downvote', { result })
             })
 
+            socket.on('disconnect', async ()=> {
+                try {
+                    const { roomId, username } = socket.data 
+                    console.log(roomId)
+                    console.log(username)
+                    const userKey = `room:${roomId}:users`
+                    await redis.sRem(userKey, username)
+
+                    socket.to(roomId).emit('disconnect', username)
+
+                    console.log(`${username} left room ${roomId}`)
+                } catch (error) {
+                    
+                }
+            })
         })
     }
 

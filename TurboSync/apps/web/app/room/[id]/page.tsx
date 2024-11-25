@@ -11,26 +11,33 @@ interface iSong {
 export function page ({ params }: { params: Promise<{ id: string }> }) {    
     const id = React.use(params);
     const roomId = id.id
-    const { checkRoom, socket, leaveRoom, addSong, upvote, downvote } = useSocket();
+    const { socket, leaveRoom, addSong, upvote, downvote } = useSocket();
     const [users, setUsers] = React.useState<any>([])
     const [url, setUrl] = useState<string>("")
     const [songs, setSongs] = useState<iSong[]>([])
 
     useEffect(() => {
-        async function checkRooms() {
-            await checkRoom(roomId, (result)=>{
-                const resultParsed = JSON.parse(result)
-                // setUsers(userParsed.user)
-                console.log(resultParsed)
-                setUsers(resultParsed.user)
-                setSongs(resultParsed.playlist)
-            })
+        const checkRoom = (roomId: string, callback: (user: string) => void) => {
+            if (socket) {
+                socket.emit("checkRoom", roomId, callback);
+            }
         }
-        checkRooms()
-    }, [])
+        checkRoom(roomId, (result)=>{
+            console.log(result)
+            setUsers(result)
+        })
+
+        return () => {
+            socket?.off('checkRoom');
+        };
+    }, [socket])
 
     useEffect(()=>{
-        socket?.on('checkRoom', (message)=>{
+         socket?.on('joinRoom', (message)=>{
+            console.log("User Joined");
+         })
+         socket?.on('checkRoom', (message)=>{
+            console.log("Check room called!");
             const data = JSON.parse(message)
             console.log(data)
             setUsers(data.user)
@@ -102,9 +109,9 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
             </div>
             <div>
                 Users: 
-                { users.map((user : { id: string, username: string })=>{
-                    return <div key={user.id}>{user.username}</div>
-                })}
+                { users.length > 0 ? users.map((user: string)=>{
+                return <div key={user}>{user}</div>
+                }) : null}
             </div>
             <div>
                 <input type="text" placeholder="Enter The url" value={url} onChange={(e)=>setUrl(e.target.value)} />

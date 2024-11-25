@@ -10,7 +10,6 @@ interface iSocketContext {
     socket: Socket | undefined;
     joinRoom: ({roomId, username}: { roomId: string, username: string }) => any;
     leaveRoom: (roomId: string) => any;
-    checkRoom: (roomId: string, callback: (user: string) => void) => any;
     addSong: ({roomId, song}: { roomId: string, song:{ title: string, youtubeId: string } }) => any;
     upvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
     downvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
@@ -32,23 +31,17 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
     const joinRoom = useCallback(({roomId, username}: { roomId: string, username: string }) => {
         if (socket) {
             socket.emit("joinRoom", { roomId: roomId, username: username });
+            localStorage.setItem("username", username)
             redirect(`/room/${roomId}`)
         }
-        console.log("Join room " + roomId);
     }, [socket]);
 
     const leaveRoom = useCallback((roomId: string) => {
+        const username = localStorage.getItem("username")
         if (socket) {
-            socket.emit("leaveRoom", roomId);
+            socket.emit("leaveRoom", { roomId: roomId, username: username });
         }
         console.log("Leave room " + roomId);
-    }, [socket]);
-
-    const checkRoom = useCallback((roomId: string, callback: (user: string) => void) => {
-        if (socket) {
-            socket.emit("checkRoom", roomId, callback);
-        }
-        console.log("Check room " + roomId);
     }, [socket]);
 
     const addSong = useCallback(({song, roomId} : { song: { title: string, youtubeId: string }, roomId: string }) => {
@@ -80,7 +73,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
     },[])
     
     return (
-        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, checkRoom: checkRoom, socket: socket, addSong: addSong, upvote: upvote, downvote: downvote }}>
+        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, socket: socket, addSong: addSong, upvote: upvote, downvote: downvote }}>
             {children}
         </SocketContext.Provider>
     );
