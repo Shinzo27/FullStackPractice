@@ -28,7 +28,7 @@ class SocketService {
                     username: userMap.get(socket.id)
                 }))
                 io.to(roomId).emit('checkRoom', JSON.stringify({ user: user }))
-            }
+            }   
 
             socket.on('joinRoom', async({roomId, username})=> {
                 socket.join(roomId)
@@ -44,26 +44,25 @@ class SocketService {
             })
 
             socket.on('checkRoom', async (roomId, callback)=> {
+                const votekey = `room:${roomId}:votes`
                 const socketsInRoom = await io.in(roomId).fetchSockets()
                 const user = socketsInRoom.map((socket)=>({
                     id: socket.id,
                     username: userMap.get(socket.id)
                 }))
-                callback(JSON.stringify({ user: user }))
+                const playlist = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+                callback(JSON.stringify({ user: user, playlist: playlist }))
             })
 
             socket.on('addSong', async ({roomId, song})=> {
-                const playlistkey = `room:${roomId}:playlist`
                 const votekey = `room:${roomId}:votes`
                 const songtitle = JSON.parse(song).title
-
-                await redis.rPush(playlistkey, song)
 
                 await redis.zAdd(votekey, { score: 0, value: songtitle }, { NX: true });
 
                 const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
 
-                io.to(roomId).emit('addSong', JSON.parse(song), { songs: songs })
+                io.to(roomId).emit('addSong', songs)
             })
 
             socket.on('upvote', async ({roomId, songTitle})=> {
@@ -79,15 +78,23 @@ class SocketService {
                     return console.log("No song found!");
                 }
 
-                console.log(result); 
                 io.to(roomId).emit('upvote', { result })
             })
 
-            socket.on('downvote', async ({roomId, song})=> {
+            socket.on('downvote', async ({roomId, songTitle})=> {
                 const votekey = `room:${roomId}:votes`
-                const songtitle = JSON.parse(song).title
+                const songtitle = songTitle
 
-                await redis.zIncrBy(votekey, -1, songtitle);
+                await redis.zIncrBy(votekey, -1, songtitle)
+
+                const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+
+                if (result.length === 0) {
+                    // throw new Error('No songs found in the room.');
+                    return console.log("No song found!");
+                }
+
+                io.to(roomId).emit('downvote', { result })
             })
 
         })

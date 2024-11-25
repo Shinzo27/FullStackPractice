@@ -13,6 +13,7 @@ interface iSocketContext {
     checkRoom: (roomId: string, callback: (user: string) => void) => any;
     addSong: ({roomId, song}: { roomId: string, song:{ title: string, youtubeId: string } }) => any;
     upvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
+    downvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
 }
 
 const SocketContext = React.createContext<iSocketContext | null>(null);
@@ -62,6 +63,12 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
         }
     }, [socket]);
 
+    const downvote = useCallback(({roomId, songtitle}: { roomId: string, songtitle: string }) => {
+        if (socket) {
+            socket.emit("downvote", { roomId: roomId, songTitle: songtitle });
+        }
+    }, [socket]);
+
     useEffect(() => {
         const _socket = io("http://localhost:8000");
         setSocket(_socket)
@@ -73,7 +80,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
     },[])
     
     return (
-        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, checkRoom: checkRoom, socket: socket, addSong: addSong, upvote: upvote }}>
+        <SocketContext.Provider value={{ joinRoom: joinRoom, leaveRoom: leaveRoom, checkRoom: checkRoom, socket: socket, addSong: addSong, upvote: upvote, downvote: downvote }}>
             {children}
         </SocketContext.Provider>
     );

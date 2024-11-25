@@ -4,24 +4,26 @@ import { useSocket } from "../../../context/SocketProvider";
 import { redirect } from "next/navigation";
 
 interface iSong {
-    title: string;
-    votes: number;
+    value: string;
+    score: number;
 }
 
 export function page ({ params }: { params: Promise<{ id: string }> }) {    
     const id = React.use(params);
     const roomId = id.id
-    const { checkRoom, socket, leaveRoom, addSong, upvote } = useSocket();
+    const { checkRoom, socket, leaveRoom, addSong, upvote, downvote } = useSocket();
     const [users, setUsers] = React.useState<any>([])
     const [url, setUrl] = useState<string>("")
     const [songs, setSongs] = useState<iSong[]>([])
 
     useEffect(() => {
         async function checkRooms() {
-            await checkRoom(roomId, (user)=>{
-                const userParsed = JSON.parse(user)
-                console.log(userParsed)
-                setUsers(userParsed.user)
+            await checkRoom(roomId, (result)=>{
+                const resultParsed = JSON.parse(result)
+                // setUsers(userParsed.user)
+                console.log(resultParsed)
+                setUsers(resultParsed.user)
+                setSongs(resultParsed.playlist)
             })
         }
         checkRooms()
@@ -30,21 +32,18 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     useEffect(()=>{
         socket?.on('checkRoom', (message)=>{
             const data = JSON.parse(message)
+            console.log(data)
             setUsers(data.user)
+            setSongs(data.playlist)
         })
         socket?.on('addSong', (message)=>{
-            console.log(message)
-            setSongs((prevSongs)=>[...prevSongs, message.title])
+            setSongs(message)
         })
         socket?.on('upvote', (message)=>{
-            console.log(message)
-            setSongs((prevSongs)=>{
-                const song = prevSongs.find((song)=>song.title === message.result[0].value)
-                if(song){
-                    song.votes = song.votes + 1
-                }
-                return [...prevSongs]
-            })
+            setSongs(message.result)
+        })
+        socket?.on('downvote', (message)=>{
+            setSongs(message.result)
         })
 
         return () => {
@@ -60,7 +59,6 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
     }
 
     const extractYoutubeID = (url: string) => {
-        console.log(url);
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const match = url.match(regExp);
         return (match && match[2]?.length === 11) ? match[2] : null;
@@ -85,6 +83,17 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
 
     const handleUpvote = ({songTitle}: { songTitle: string }) => {
         upvote({roomId: roomId, songtitle: songTitle})
+    }
+
+    const handleDownvote = ({songTitle}: { songTitle: string }) => {
+        const checkVote = songs.find((song)=>song.value === songTitle)
+        if(checkVote){
+            if(checkVote.score === 0){
+                alert("You can't downvote a song that has already been downvoted")
+                return
+            }
+        }
+        downvote({roomId: roomId, songtitle: songTitle})
     }
     return (
         <>
@@ -112,20 +121,20 @@ export function page ({ params }: { params: Promise<{ id: string }> }) {
                     <div>
                         Songs: 
                         { songs.map((song: any)=>{
-                            return <div key={song} className="flex items-center">
+                            return <div key={song.value} className="flex items-center">
                                 <div>
-                                    {song}
+                                    {song.value}
                                 </div>
                                 <div>
-                                    Votes: {song.votes}
+                                    Votes: {song.score}
                                 </div>
                                 <div>
-                                    <button onClick={()=>handleUpvote({songTitle: song})}>
+                                    <button onClick={()=>handleUpvote({songTitle: song.value})}>
                                         Upvote
                                     </button>
                                 </div>
                                 <div>
-                                    <button>
+                                    <button onClick={()=>handleDownvote({songTitle: song.value})}>
                                         Downvote
                                     </button>
                                 </div>
