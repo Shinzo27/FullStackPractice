@@ -55,10 +55,20 @@ class SocketService {
 
             socket.on('addSong', async ({roomId, song})=> {
                 const votekey = `room:${roomId}:votes`
+                const currentSongKey = `room:${roomId}:current_song`;
+
+                const current_song = await redis.get(currentSongKey)
+
+                if(!current_song){
+                    await redis.set(currentSongKey, song)
+                }
+
+                const newCurrentSong = await redis.get(currentSongKey)
+
                 await redis.zAdd(votekey, { score: 0, value: song });
 
                 const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
-
+                io.to(roomId).emit('currentSong', newCurrentSong)
                 io.to(roomId).emit('addSong', songs)
             })
 
@@ -93,6 +103,22 @@ class SocketService {
                 }
 
                 io.to(roomId).emit('downvote', { result })
+            })
+
+            socket.on("nextsong", async (roomId) => {
+                const votekey = `room:${roomId}:votes`
+                const currentSongKey = `room:${roomId}:current_song`;
+
+                const nextSong = await redis.zPopMax(votekey)
+
+                if(!nextSong){
+                    io.emit("nextsong", { message: "No song found!" })
+                    return
+                }
+
+                await redis.set(currentSongKey, nextSong.value)
+
+                io.to(roomId).emit("nextsong",  nextSong )
             })
         })
     }

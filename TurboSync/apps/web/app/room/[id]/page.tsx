@@ -68,10 +68,9 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
     setSongs(songs.filter((song) => song.value.title !== songName));
   };
 
-  const changeSong = (song: typeof currentSong) => {
-    setCurrentSong(song);
-    if (player) {
-      player.loadVideoById(song?.value.youtubeId);
+  const changeSong = async() => {
+    if(socket){
+      socket.emit("nextsong", roomId)
     }
   };
 
@@ -111,6 +110,20 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
       socket.on("leaveRoom", (message) => {
         alert(`${message.username} left the room`);
         setUsers(message.users);
+      });
+    }
+
+    if(socket){
+      socket.on("nextsong", (message) => {
+        if(message.message){
+          return alert(message.message)
+        }
+        const parsedSong = JSON.parse(message.value);
+        setCurrentSong(parsedSong);
+        console.log(parsedSong);
+        if (player) {
+          player.loadVideoById(parsedSong.youtubeId);
+        }
       });
     }
 
@@ -234,8 +247,7 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
         {songs.length > 0 ? (
           <div>
             Songs:
-            {songs.map((song: any) => {
-              return (
+            {songs.map((song: any) => (
                 <div key={song.value.youtubeId} className="flex items-center">
                   <div>{song.value.title}</div>
                   <div>Votes: {song.score}</div>
@@ -254,8 +266,8 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
                     </button>
                   </div>
                 </div>
-              );
-            })}
+              )
+            )}
           </div>
         ) : (
           <div>No Songs Added Yet</div>
@@ -266,14 +278,14 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
       </div>
       <div className="flex items-center justify-between mt-4">
         <div>
-          <h3 className="text-lg font-semibold">{currentSong?.value.title}</h3>
+          {/* <h3 className="text-lg font-semibold">{currentSong?.value.title}</h3> */}
           <p className="text-sm text-gray-500 dark:text-gray-400">{"ABCD"}</p>
         </div>
         <div className="flex items-center space-x-2">
           <button onClick={togglePlayPause}>
             {isPlaying ? <div>Pause</div> : <div>Play</div>}
           </button>
-          <button onClick={()=>changeSong(songs[1])}>
+          <button onClick={()=>changeSong()}>
             Skip</button>
         </div>
       </div>
