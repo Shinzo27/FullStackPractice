@@ -55,9 +55,7 @@ class SocketService {
 
             socket.on('addSong', async ({roomId, song})=> {
                 const votekey = `room:${roomId}:votes`
-                const songtitle = JSON.parse(song).title
-
-                await redis.zAdd(votekey, { score: 0, value: songtitle }, { NX: true });
+                await redis.zAdd(votekey, { score: 0, value: song });
 
                 const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
 
@@ -66,7 +64,8 @@ class SocketService {
 
             socket.on('upvote', async ({roomId, songTitle})=> {
                 const votekey = `room:${roomId}:votes`
-                const songtitle = songTitle
+                const songtitle = JSON.stringify(songTitle)
+                console.log(songtitle)
 
                 await redis.zIncrBy(votekey, 1, songtitle);
 

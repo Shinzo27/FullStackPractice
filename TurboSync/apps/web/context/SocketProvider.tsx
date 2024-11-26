@@ -11,7 +11,7 @@ interface iSocketContext {
     joinRoom: ({roomId, username}: { roomId: string, username: string }) => any;
     leaveRoom: (roomId: string) => any;
     addSong: ({roomId, song}: { roomId: string, song:{ title: string, youtubeId: string } }) => any;
-    upvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
+    upvote: ({roomId, songtitle}: { roomId: string, songtitle: any }) => any;
     downvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
 }
 
