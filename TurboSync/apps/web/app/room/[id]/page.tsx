@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSocket } from "../../../context/SocketProvider";
 import { redirect } from "next/navigation";
 
@@ -20,46 +20,36 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
   const [url, setUrl] = useState<string>("");
   const [songs, setSongs] = useState<iSong[]>([]);
   const [currentSong, setCurrentSong] = useState(songs[0]);
-  const [player, setPlayer] = useState<any>(null);
+  const playerRef = useRef<any>(null);
 
   useEffect(() => {
     if(!currentSong) return;
+    console.log("use effect called!");
+    if (!(window as any).YT) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      document.body.appendChild(script);
+    }
 
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName("script")[0];
-    firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
-
-    // Initialize YouTube player when API is ready
     window.onYouTubeIframeAPIReady = () => {
-      const newPlayer = new (window as any).YT.Player("youtube-player", {
-        height: "100%",
-        width: "100%",
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-        },
+      playerRef.current = new (window as any).YT.Player("youtube-player", {
+        height: "390",
+        width: "640",
         videoId: currentSong?.value.youtubeId,
         events: {
-          onReady: (event: any) => {
-            setPlayer(event.target);
-          },
-          onStateChange: (event: any) => {
-            setIsPlaying(event.data === (window as any).YT.PlayerState.PLAYING);
-          },
+          onReady: () => console.log("Player is ready"),
         },
       });
     };
   }, [currentSong]);
 
   const togglePlayPause = () => {
-    if (player) {
+    if (playerRef) {
       if (isPlaying) {
-        player.pauseVideo();
+        playerRef.current.pauseVideo();
       } else {
-        player.playVideo();
+        playerRef.current.playVideo();
       }
     }
   };
@@ -118,11 +108,12 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
         if(message.message){
           return alert(message.message)
         }
-        const parsedSong = JSON.parse(message.value);
+        const parsedSong = JSON.parse(message);
         setCurrentSong(parsedSong);
-        console.log(parsedSong);
-        if (player) {
-          player.loadVideoById(parsedSong.youtubeId);
+        if (playerRef.current) {
+          playerRef.current.loadVideoById(parsedSong.youtubeId);
+        } else {
+          console.log("Player not found")
         }
       });
     }
@@ -131,6 +122,7 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
       socket?.off("checkRoom");
       socket?.off("joinRoom");
       socket?.off("leaveRoom");
+      socket?.off("nextsong");
     };
   }, [socket]);
 
@@ -138,7 +130,6 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
     socket?.on("checkRoom", (message) => {
       console.log("Check room called!");
       const data = JSON.parse(message);
-      console.log(data);
       setUsers(data.user);
       setSongs(data.playlist);
     });
@@ -274,7 +265,7 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
         )}
       </div>
       <div className="aspect-video w-full relative h-96">
-        <div id="youtube-player" className="absolute inset-0"></div>
+        <div id="youtube-player" className="absolute inset-0" ref={playerRef}></div>
       </div>
       <div className="flex items-center justify-between mt-4">
         <div>

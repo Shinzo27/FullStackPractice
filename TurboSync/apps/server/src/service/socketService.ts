@@ -110,15 +110,19 @@ class SocketService {
                 const currentSongKey = `room:${roomId}:current_song`;
 
                 const nextSong = await redis.zPopMax(votekey)
-
-                if(!nextSong){
+                
+                const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+                
+                if(songs.length === 0){
                     io.emit("nextsong", { message: "No song found!" })
                     return
                 }
+                
+                console.log(songs[0].value)
 
-                await redis.set(currentSongKey, nextSong.value)
+                await redis.set(currentSongKey, songs[0].value)
 
-                io.to(roomId).emit("nextsong",  nextSong )
+                io.to(roomId).emit("nextsong",  songs[0].value)
             })
         })
     }
