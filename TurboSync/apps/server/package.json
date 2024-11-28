@@ -8,11 +8,16 @@
         "dev": "tsc-watch --onSuccess \"node dist/index.js\""
     },
     "dependencies": {
+        "bullmq": "^5.29.1",
         "dotenv": "^16.4.5",
         "ioredis": "^5.4.1",
         "redis": "^4.7.0",
+        "save-dev": "^0.0.1-security",
         "socket.io": "^4.8.1",
         "tsc-watch": "^6.2.1",
         "typescript": "^5.6.3"
+    },
+    "devDependencies": {
+        "@types/redis": "^4.0.11"
     }
 }

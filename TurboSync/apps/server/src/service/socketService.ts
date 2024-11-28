@@ -45,12 +45,16 @@ class SocketService {
                 io.to(roomId).emit("leaveRoom", {roomId, username, users})
             })
 
-            socket.on('checkRoom', async (roomId, callback)=> {
+            socket.on('checkRoom', async (roomId)=> {
                 const userKey = `room:${roomId}:users`
                 const user = await redis.sMembers(userKey)
                 const votekey = `room:${roomId}:votes`
+                const currentSongKey = `room:${roomId}:current_song`;
+
                 const playlist = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
-                callback({user, playlist})
+                const current_song = await redis.get(currentSongKey)
+                
+                io.to(roomId).emit("checkRoom", {user, playlist, current_song})
             })
 
             socket.on('addSong', async ({roomId, song})=> {
@@ -69,7 +73,7 @@ class SocketService {
 
                 const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
                 io.to(roomId).emit('currentSong', newCurrentSong)
-                io.to(roomId).emit('addSong', songs)
+                io.to(roomId).emit('addSong', {songs, currentSong: newCurrentSong})
             })
 
             socket.on('upvote', async ({roomId, songTitle})=> {

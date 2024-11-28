@@ -11,6 +11,11 @@ interface iSong {
   score: number;
 }
 
+interface iCurrentSong {
+  title: string;
+  youtubeId: string;
+}
+
 export function page({ params }: { params: Promise<{ id: string }> }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const id = React.use(params);
@@ -19,7 +24,7 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
   const [users, setUsers] = React.useState<any>([]);
   const [url, setUrl] = useState<string>("");
   const [songs, setSongs] = useState<iSong[]>([]);
-  const [currentSong, setCurrentSong] = useState(songs[0]);
+  const [currentSong, setCurrentSong] = useState<iCurrentSong>();
   const playerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -36,7 +41,13 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
       playerRef.current = new (window as any).YT.Player("youtube-player", {
         height: "390",
         width: "640",
-        videoId: currentSong?.value.youtubeId,
+        videoId: currentSong?.youtubeId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+        },
         events: {
           onReady: () => console.log("Player is ready"),
         },
@@ -65,27 +76,24 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
   };
 
   useEffect(() => {
-    const checkRoom = (
-      roomId: string,
-      callback: ({
-        user,
-        playlist,
-      }: {
-        user: string[];
-        playlist: iSong[];
-      }) => void
-    ) => {
-      if (socket) {
-        socket.emit("checkRoom", roomId, callback);
-      }
-    };
-    checkRoom(roomId, (result) => {
-      const users = result.user;
-      const playlist = result.playlist;
-      setUsers(users);
-      setSongs(playlist);
-      setCurrentSong(playlist[0]);
-    });
+    if(socket){
+      socket.emit("checkRoom", roomId)
+    }
+
+    if(socket){
+      socket.on("checkRoom", (result) => {
+        console.log(result)
+        if(result.current_song !== null){ 
+          const newCurrentSong = JSON.parse(result.current_song)
+          console.log(newCurrentSong)
+          setCurrentSong(newCurrentSong)
+        }
+        const users = result.user;
+        const playlist = result.playlist;
+        setUsers(users);
+        setSongs(playlist);
+      });
+    }
 
     if (socket) {
       socket.on("joinRoom", (message) => {
@@ -127,19 +135,17 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
   }, [socket]);
 
   useEffect(() => {
-    socket?.on("checkRoom", (message) => {
-      console.log("Check room called!");
-      const data = JSON.parse(message);
-      setUsers(data.user);
-      setSongs(data.playlist);
-    });
     socket?.on("addSong", (message) => {
-      const parsedSong = message.map((song: any) => ({
+      console.log(message)
+      const parsedSong = message.songs.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,
       }));
+      console.log(parsedSong);
       setSongs(parsedSong);
-      setCurrentSong(parsedSong[0]);
+      const parsedCurrentSong = JSON.parse(message.currentSong)
+      console.log(parsedCurrentSong);
+      setCurrentSong(parsedCurrentSong);
     });
     socket?.on("upvote", (message) => {
       console.log(message);
@@ -238,8 +244,8 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
         {songs.length > 0 ? (
           <div>
             Songs:
-            {songs.map((song: any) => (
-                <div key={song.value.youtubeId} className="flex items-center">
+            {songs.map((song: any, index: number) => (
+                <div key={index} className="flex items-center">
                   <div>{song.value.title}</div>
                   <div>Votes: {song.score}</div>
                   <div>
