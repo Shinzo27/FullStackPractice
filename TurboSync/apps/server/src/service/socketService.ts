@@ -10,12 +10,14 @@ class SocketService {
             cors: {
                 origin: "*",
                 allowedHeaders: "*"
+            
             }
         })
     }
 
     public initListener(){
         const io = this.io;
+        
         io.on('connect', (socket)=>{
             console.log("Socket connected")
 

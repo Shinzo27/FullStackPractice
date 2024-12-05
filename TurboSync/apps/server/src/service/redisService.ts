@@ -9,7 +9,6 @@ redis.on('connect', () => {
 });
 
 redis.on('error', (err) => {
-    console.log(process.env.REDIS_PORT)
     console.error('Redis error', err);
 });
 

@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "Microservices/catalog_service"
+		},
+		{
+			"path": "Microservices/order_service"
+		}
+	]
+}
