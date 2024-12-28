@@ -95,20 +95,41 @@ class SocketService {
                 io.to(roomId).emit('upvote', { result })
             })
 
+            // Decrement the vote count for a song 
+            // Fix error
             socket.on('downvote', async ({roomId, songTitle})=> {
-                const votekey = `room:${roomId}:votes`
-                const songtitle = songTitle
-
-                await redis.zIncrBy(votekey, -1, songtitle)
-
-                const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
-
-                if (result.length === 0) {
-                    // throw new Error('No songs found in the room.');
-                    return console.log("No song found!");
+                try {
+                    if (!roomId || !songTitle) {
+                        throw new Error("Invalid roomId or songTitle");
+                    }
+            
+                    console.log("Room ID:", roomId);
+                    console.log("Song Title:", songTitle);
+            
+                    const voteKey = `room:${roomId}:votes`;
+            
+                    // Ensure the song exists in the sorted set before decrementing
+                    const songExists = await redis.zScore(voteKey, songTitle);
+                    if (songExists === null) {
+                        console.error(`Song "${songTitle}" not found in room ${roomId}.`);
+                        return;
+                    }
+            
+                    // Decrement the vote count
+                    await redis.zIncrBy(voteKey, -1, songTitle);
+            
+                    // Fetch updated vote list
+                    const result = await redis.zRangeWithScores(voteKey, 0, -1, { REV: true });
+                    if (result.length === 0) {
+                        console.log("No songs found!");
+                        return;
+                    }
+            
+                    // Broadcast updated list
+                    io.to(roomId).emit('downvote', { result });
+                } catch (error) {
+                    console.error("Error during downvote:", error);
                 }
-
-                io.to(roomId).emit('downvote', { result })
             })
 
             socket.on("nextsong", async (roomId) => {

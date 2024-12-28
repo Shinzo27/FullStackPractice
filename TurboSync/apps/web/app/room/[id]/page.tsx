@@ -207,8 +207,9 @@ export function page({ params }: { params: Promise<{ id: string }> }) {
     upvote({ roomId: roomId, songtitle: songTitle });
   };
 
-  const handleDownvote = ({ songTitle }: { songTitle: string }) => {
-    const checkVote = songs.find((song) => song.value.title === songTitle);
+  const handleDownvote = ({ songTitle }: { songTitle: any }) => {
+    const checkVote = songs.find((song) => song.value === songTitle);
+    console.log(checkVote);
     if (checkVote) {
       if (checkVote.score === 0) {
         alert("You can't downvote a song that has already been downvoted");
