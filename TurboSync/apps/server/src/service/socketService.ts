@@ -95,37 +95,23 @@ class SocketService {
                 io.to(roomId).emit('upvote', { result })
             })
 
-            // Decrement the vote count for a song 
-            // Fix error
             socket.on('downvote', async ({roomId, songTitle})=> {
                 try {
                     if (!roomId || !songTitle) {
                         throw new Error("Invalid roomId or songTitle");
                     }
             
-                    console.log("Room ID:", roomId);
-                    console.log("Song Title:", songTitle);
-            
                     const voteKey = `room:${roomId}:votes`;
+                    const songtitle = JSON.stringify(songTitle)
+
+                    await redis.zIncrBy(voteKey, -1, songtitle);
             
-                    // Ensure the song exists in the sorted set before decrementing
-                    const songExists = await redis.zScore(voteKey, songTitle);
-                    if (songExists === null) {
-                        console.error(`Song "${songTitle}" not found in room ${roomId}.`);
-                        return;
-                    }
-            
-                    // Decrement the vote count
-                    await redis.zIncrBy(voteKey, -1, songTitle);
-            
-                    // Fetch updated vote list
                     const result = await redis.zRangeWithScores(voteKey, 0, -1, { REV: true });
                     if (result.length === 0) {
                         console.log("No songs found!");
                         return;
                     }
-            
-                    // Broadcast updated list
+
                     io.to(roomId).emit('downvote', { result });
                 } catch (error) {
                     console.error("Error during downvote:", error);
